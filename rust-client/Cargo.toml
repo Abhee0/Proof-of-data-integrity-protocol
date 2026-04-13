@@ -1,0 +1,51 @@
+[package]
+name    = "proof-of-data-integrity"
+version = "0.1.0"
+edition = "2021"
+description = "CLI client for the Proof of Data Integrity Protocol"
+
+[[bin]]
+name = "podip"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime — `full` includes timers, I/O, and the multi-threaded scheduler.
+tokio = { version = "1", features = ["full"] }
+
+# Ethereum interaction: abigen generates type-safe Rust bindings from the ABI.
+# `rustls` avoids OpenSSL dependency hell on most build environments.
+ethers = { version = "2", features = ["abigen", "rustls"] }
+
+# SHA-256 hashing — pure Rust, no C bindings.
+sha2 = "0.10"
+
+# Hex encode/decode for displaying and parsing bytes32 hashes.
+hex = "0.4"
+
+# CLI argument parsing with derive macros — zero boilerplate.
+clap = { version = "4", features = ["derive", "env"] }
+
+# Flexible, composable error handling for library/application code.
+anyhow  = "1"         # opaque errors with context chaining (application layer)
+thiserror = "1"       # typed errors with Display impl  (library layer)
+
+# Load .env file at startup — keeps secrets out of source control.
+dotenvy = "0.15"
+
+# Structured, leveled logging facade + subscriber.
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# Serialization — used to parse ABI JSON and for any structured output.
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Human-readable timestamps (Unix → UTC display).
+chrono = { version = "0.4", features = ["serde"] }
+
+[profile.release]
+# LTO and codegen-units=1 produce the smallest, fastest binary.
+# Useful for a CLI tool that runs in CI or production pipelines.
+lto           = true
+codegen-units = 1
+strip         = true
