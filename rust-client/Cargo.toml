@@ -43,6 +43,9 @@ serde_json = "1"
 # Human-readable timestamps (Unix → UTC display).
 chrono = { version = "0.4", features = ["serde"] }
 
+[dev-dependencies]
+tempfile = "3"
+
 [profile.release]
 # LTO and codegen-units=1 produce the smallest, fastest binary.
 # Useful for a CLI tool that runs in CI or production pipelines.

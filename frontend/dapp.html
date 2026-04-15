@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PODIP — Live dApp | Proof of Data Integrity Protocol</title>
+  <meta name="description" content="Connect your MetaMask wallet and anchor SHA-256 file hashes on Ethereum Sepolia testnet." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <!-- ethers.js v6 via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js" integrity="sha512-EAbASRBolWElBYM3C4PRJQ77EYjgNWC99mBROlqT4MiQpgknqmhJiOq/0pgQoZCFHBMbVxVcCQSSf3IQMR3vA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    /* ── DESIGN TOKENS ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #080c14;
+      --bg2:      #0d1321;
+      --bg3:      #111827;
+      --bg4:      #151e2e;
+      --border:   rgba(110,231,247,.1);
+      --bh:       rgba(110,231,247,.22);
+      --teal:     #6EE7F7;
+      --purple:   #A78BFA;
+      --green:    #34D399;
+      --amber:    #FBBF24;
+      --red:      #F87171;
+      --t1:       #F1F5F9;
+      --t2:       #94A3B8;
+      --t3:       #64748B;
+      --mono:     'JetBrains Mono', monospace;
+      --sans:     'Inter', system-ui, sans-serif;
+      --ease:     cubic-bezier(.16,1,.3,1);
+      --g:        linear-gradient(135deg,var(--teal),var(--purple));
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--t1);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    code { font-family: var(--mono); font-size:.85em; color:var(--teal);
+           background:rgba(110,231,247,.08); padding:2px 6px; border-radius:4px; }
+    a { color:var(--teal); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+
+    /* ── LAYOUT ─────────────────────────────────────────────────────────── */
+    .wrap { max-width:920px; margin:0 auto; padding:0 20px; }
+
+    /* ── TOPBAR ──────────────────────────────────────────────────────────── */
+    .topbar {
+      position:sticky; top:0; z-index:50;
+      background:rgba(8,12,20,.9); backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+      padding:14px 0;
+    }
+    .topbar-inner {
+      max-width:920px; margin:0 auto; padding:0 20px;
+      display:flex; align-items:center; gap:16px;
+    }
+    .logo { display:flex; align-items:center; gap:9px; font-weight:800; font-size:1.1rem;
+            background:var(--g); -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent; background-clip:text; }
+    .logo-badge {
+      font-size:.65rem; font-weight:700; padding:2px 8px; border-radius:100px;
+      background:rgba(52,211,153,.1); color:var(--green);
+      border:1px solid rgba(52,211,153,.3); -webkit-text-fill-color:var(--green);
+    }
+    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+    .network-pill {
+      display:flex; align-items:center; gap:6px;
+      font-size:.75rem; font-weight:600; padding:5px 11px; border-radius:100px;
+      background:rgba(110,231,247,.06); border:1px solid rgba(110,231,247,.15);
+      color:var(--teal);
+    }
+    .net-dot { width:6px; height:6px; border-radius:50%; background:var(--teal);
+               box-shadow:0 0 6px var(--teal); animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+
+    /* ── BUTTONS ─────────────────────────────────────────────────────────── */
+    .btn {
+      display:inline-flex; align-items:center; gap:7px; padding:11px 22px;
+      border-radius:10px; font-weight:600; font-size:.875rem; cursor:pointer;
+      border:none; transition:all .2s var(--ease); font-family:var(--sans);
+      white-space:nowrap; text-decoration:none;
+    }
+    .btn-primary { background:var(--g); color:#040810;
+                   box-shadow:0 0 16px rgba(110,231,247,.2); }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 0 28px rgba(110,231,247,.4); }
+    .btn-ghost  { background:transparent; color:var(--t1);
+                  border:1px solid var(--bh); }
+    .btn-ghost:hover  { background:rgba(255,255,255,.04); color:var(--teal); transform:translateY(-1px); }
+    .btn-danger { background:rgba(248,113,113,.1); color:var(--red);
+                  border:1px solid rgba(248,113,113,.25); }
+    .btn-danger:hover { background:rgba(248,113,113,.18); }
+    .btn-sm   { padding:7px 14px; font-size:.8rem; border-radius:7px; }
+    .btn-full { width:100%; justify-content:center; }
+    .btn:disabled { opacity:.4; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+
+    /* ── CARDS ───────────────────────────────────────────────────────────── */
+    .card {
+      background:var(--bg3); border:1px solid var(--border); border-radius:16px;
+      padding:28px; transition:border-color .2s;
+    }
+    .card:hover { border-color:var(--bh); }
+    .card-title {
+      display:flex; align-items:center; gap:9px; font-weight:700; font-size:.95rem;
+      color:var(--teal); margin-bottom:20px;
+    }
+
+    /* ── STEP HEADER ─────────────────────────────────────────────────────── */
+    .step-num {
+      width:26px; height:26px; border-radius:50%; display:flex;
+      align-items:center; justify-content:center; font-size:.75rem;
+      font-weight:800; background:var(--g); color:#040810; flex-shrink:0;
+    }
+
+    /* ── INPUTS ──────────────────────────────────────────────────────────── */
+    .field { display:flex; flex-direction:column; gap:6px; }
+    .label { font-size:.75rem; font-weight:700; color:var(--t2);
+             text-transform:uppercase; letter-spacing:.07em; }
+    .input {
+      background:rgba(255,255,255,.04); border:1px solid var(--border);
+      border-radius:10px; padding:11px 13px; color:var(--t1);
+      font-family:var(--mono); font-size:.82rem; width:100%;
+      outline:none; transition:border-color .2s, box-shadow .2s;
+    }
+    .input:focus { border-color:rgba(110,231,247,.4); box-shadow:0 0 0 3px rgba(110,231,247,.08); }
+    .input::placeholder { color:var(--t3); }
+    .input-row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end; }
+
+    /* ── STATUS CHIPS ────────────────────────────────────────────────────── */
+    .chip {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:3px 10px; border-radius:100px; font-size:.72rem; font-weight:700;
+    }
+    .chip-green { background:rgba(52,211,153,.1); color:var(--green); border:1px solid rgba(52,211,153,.25); }
+    .chip-red   { background:rgba(248,113,113,.1); color:var(--red);   border:1px solid rgba(248,113,113,.25); }
+    .chip-amber { background:rgba(251,191,36,.1);  color:var(--amber);  border:1px solid rgba(251,191,36,.25); }
+    .chip-blue  { background:rgba(110,231,247,.1); color:var(--teal);   border:1px solid rgba(110,231,247,.25); }
+
+    /* ── ALERT BOXES ─────────────────────────────────────────────────────── */
+    .alert {
+      border-radius:10px; padding:14px 16px; font-size:.85rem;
+      display:flex; gap:10px; align-items:flex-start; line-height:1.55;
+    }
+    .alert-icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
+    .alert-warn  { background:rgba(251,191,36,.06); border:1px solid rgba(251,191,36,.2); color:var(--amber); }
+    .alert-info  { background:rgba(110,231,247,.05); border:1px solid rgba(110,231,247,.15); color:var(--teal); }
+    .alert-error { background:rgba(248,113,113,.06); border:1px solid rgba(248,113,113,.2); color:var(--red); }
+    .alert-success { background:rgba(52,211,153,.06); border:1px solid rgba(52,211,153,.2); color:var(--green); }
+    .alert strong { font-weight:700; }
+    .hidden { display:none !important; }
+
+    /* ── DROP ZONE ───────────────────────────────────────────────────────── */
+    .drop-zone {
+      border:2px dashed rgba(110,231,247,.2); border-radius:12px;
+      padding:36px 20px; text-align:center; cursor:pointer;
+      background:rgba(110,231,247,.02); transition:all .2s;
+    }
+    .drop-zone:hover, .drop-zone.drag { border-color:rgba(110,231,247,.5);
+      background:rgba(110,231,247,.06); }
+    .drop-icon { color:var(--teal); opacity:.45; margin-bottom:10px; display:flex;
+                 justify-content:center; transition:opacity .2s, transform .2s; }
+    .drop-zone:hover .drop-icon { opacity:.9; transform:translateY(-4px); }
+    .drop-title { font-weight:600; margin-bottom:4px; }
+    .drop-sub   { font-size:.82rem; color:var(--t2); }
+    .link-btn { background:none; border:none; color:var(--teal); cursor:pointer;
+                font-family:var(--sans); font-size:inherit; padding:0; }
+
+    /* ── HASH DISPLAY ────────────────────────────────────────────────────── */
+    .hash-box {
+      background:#080f1c; border:1px solid rgba(110,231,247,.15);
+      border-radius:10px; padding:14px;
+    }
+    .hash-box-label { font-size:.7rem; text-transform:uppercase; letter-spacing:.08em;
+                      color:var(--t3); font-weight:700; margin-bottom:8px; }
+    .hash-row { display:flex; gap:8px; align-items:flex-start; }
+    .hash-val  { font-family:var(--mono); font-size:.8rem; color:var(--teal);
+                 word-break:break-all; flex:1; }
+    .copy-btn {
+      background:rgba(110,231,247,.08); border:1px solid rgba(110,231,247,.2);
+      border-radius:6px; color:var(--teal); cursor:pointer; padding:5px 7px;
+      display:flex; align-items:center; flex-shrink:0;
+    }
+    .copy-btn:hover { background:rgba(110,231,247,.15); }
+
+    /* ── TX RESULT ───────────────────────────────────────────────────────── */
+    .tx-result {
+      border-radius:12px; padding:18px; margin-top:16px;
+      animation:fadeUp .4s var(--ease);
+    }
+    .tx-success { background:rgba(52,211,153,.05); border:1px solid rgba(52,211,153,.2); }
+    .tx-failed  { background:rgba(248,113,113,.05); border:1px solid rgba(248,113,113,.2); }
+    .tx-title   { font-weight:700; font-size:.95rem; margin-bottom:12px; }
+    .tx-meta    { display:flex; flex-direction:column; gap:6px; }
+    .tx-row     { display:flex; gap:10px; font-size:.82rem; align-items:baseline; }
+    .tx-key     { color:var(--t3); font-weight:600; min-width:80px; flex-shrink:0;
+                  text-transform:uppercase; font-size:.7rem; letter-spacing:.06em; }
+    .tx-val     { color:var(--t1); font-family:var(--mono); word-break:break-all; }
+    .tx-link    { color:var(--teal); }
+    .tx-link:hover { text-decoration:underline; }
+
+    /* ── PROOF RECORD ────────────────────────────────────────────────────── */
+    .proof-record {
+      border-radius:12px; padding:20px; margin-top:16px;
+      animation:fadeUp .4s var(--ease);
+    }
+    .proof-found     { background:rgba(52,211,153,.05); border:1px solid rgba(52,211,153,.2); }
+    .proof-not-found { background:rgba(248,113,113,.05); border:1px solid rgba(248,113,113,.2); }
+    .proof-title     { font-weight:700; font-size:1rem; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+    .proof-rows      { display:flex; flex-direction:column; gap:8px; }
+    .proof-row       { display:flex; gap:12px; font-size:.83rem; align-items:baseline; }
+    .proof-key       { color:var(--t3); font-weight:700; min-width:90px; flex-shrink:0;
+                       text-transform:uppercase; font-size:.7rem; letter-spacing:.06em; }
+    .proof-val       { color:var(--t1); font-family:var(--mono); word-break:break-all; }
+
+    /* ── PROGRESS ────────────────────────────────────────────────────────── */
+    .progress-wrap { height:3px; background:rgba(255,255,255,.05);
+                     border-radius:3px; overflow:hidden; }
+    .progress-bar  { height:100%; background:var(--g); border-radius:3px;
+                     width:0; transition:width .1s linear; }
+
+    /* ── WALLET STATUS ───────────────────────────────────────────────────── */
+    .wallet-bar {
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      background:var(--bg4); border:1px solid var(--border);
+      border-radius:12px; padding:14px 18px; margin-bottom:24px;
+    }
+    .wallet-addr { font-family:var(--mono); font-size:.82rem; color:var(--t1); }
+    .wallet-right { margin-left:auto; display:flex; gap:8px; align-items:center; }
+    .balance-pill { font-size:.78rem; color:var(--amber); font-family:var(--mono);
+                    background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.2);
+                    padding:3px 10px; border-radius:100px; }
+
+    /* ── SETUP PANEL ─────────────────────────────────────────────────────── */
+    .setup-panel { border:1px dashed rgba(110,231,247,.2); border-radius:14px; padding:24px;
+                   background:rgba(110,231,247,.02); margin-bottom:24px; }
+    .setup-title { font-weight:700; font-size:.95rem; color:var(--teal); margin-bottom:14px;
+                   display:flex; align-items:center; gap:8px; }
+    .setup-step  { font-size:.83rem; color:var(--t2); margin-bottom:8px;
+                   padding-left:12px; border-left:2px solid rgba(110,231,247,.2); }
+    .setup-step strong { color:var(--t1); }
+
+    /* ── SECTION SEPARATOR ───────────────────────────────────────────────── */
+    .sep { border:none; border-top:1px solid var(--border); margin:28px 0; }
+
+    /* ── SPINNER ─────────────────────────────────────────────────────────── */
+    @keyframes spin  { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .spin { animation:spin .9s linear infinite; }
+
+    /* ── PAGE LAYOUT ─────────────────────────────────────────────────────── */
+    .page-main { padding:32px 0 64px; }
+    .page-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    @media(max-width:720px){ .page-grid { grid-template-columns:1fr; } }
+
+    .section-tag {
+      font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; font-weight:700;
+      color:var(--t3); margin-bottom:12px;
+    }
+
+    /* ── EVENT LOG ───────────────────────────────────────────────────────── */
+    .event-log {
+      background:#050a10; border:1px solid rgba(110,231,247,.08);
+      border-radius:10px; padding:14px; max-height:220px; overflow-y:auto;
+      font-family:var(--mono); font-size:.75rem;
+    }
+    .event-log::-webkit-scrollbar { width:4px; }
+    .event-log::-webkit-scrollbar-thumb { background:rgba(110,231,247,.2); border-radius:2px; }
+    .log-entry { color:var(--t2); line-height:1.8; }
+    .log-entry.log-ok   { color:var(--green); }
+    .log-entry.log-warn { color:var(--amber); }
+    .log-entry.log-err  { color:var(--red); }
+    .log-entry.log-info { color:var(--teal); }
+
+    /* ── CONTRACT CONFIG ─────────────────────────────────────────────────── */
+    .config-saved { font-size:.75rem; color:var(--green); animation:fadeUp .3s; }
+  </style>
+</head>
+<body>
+
+<!-- ── TOPBAR ──────────────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+        <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="url(#g1)" stroke-width="1.5" fill="none"/>
+        <path d="M14 10L18 12.5V17L14 19.5L10 17V12.5L14 10Z" fill="url(#g1)"/>
+        <defs>
+          <linearGradient id="g1" x1="2" y1="2" x2="26" y2="26">
+            <stop stop-color="#6EE7F7"/><stop offset="1" stop-color="#A78BFA"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      PODIP
+    </div>
+    <span class="logo-badge">Live dApp</span>
+    <div class="topbar-right">
+      <div class="network-pill" id="network-pill">
+        <div class="net-dot"></div>
+        <span id="network-name">Not connected</span>
+      </div>
+      <button class="btn btn-primary btn-sm" id="connect-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Connect Wallet
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ── MAIN ────────────────────────────────────────────────────────────────── -->
+<main class="page-main">
+  <div class="wrap">
+
+    <!-- Wallet connected bar -->
+    <div class="wallet-bar hidden" id="wallet-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+      <span class="wallet-addr" id="wallet-addr">0x…</span>
+      <span class="balance-pill" id="wallet-balance">0 ETH</span>
+      <div class="wallet-right">
+        <a id="faucet-link" href="https://sepoliafaucet.com" target="_blank" class="btn btn-ghost btn-sm">
+          🚰 Get Sepolia ETH
+        </a>
+        <button class="btn btn-danger btn-sm" id="disconnect-btn">Disconnect</button>
+      </div>
+    </div>
+
+    <!-- No MetaMask warning -->
+    <div class="alert alert-error hidden" id="no-metamask">
+      <span class="alert-icon">🦊</span>
+      <div>
+        <strong>MetaMask not detected.</strong> Please install the
+        <a href="https://metamask.io/download/" target="_blank">MetaMask browser extension</a>
+        and refresh this page.
+      </div>
+    </div>
+
+    <!-- Wrong network warning -->
+    <div class="alert alert-warn hidden" id="wrong-network">
+      <span class="alert-icon">⚠️</span>
+      <div>
+        <strong>Wrong network.</strong> This dApp runs on <strong>Ethereum Sepolia testnet</strong> (Chain ID: 11155111).
+        <button class="btn btn-ghost btn-sm" id="switch-network-btn" style="margin-left:8px;">Switch to Sepolia</button>
+      </div>
+    </div>
+
+    <!-- Contract Setup Panel -->
+    <div class="setup-panel" id="setup-panel">
+      <div class="setup-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Contract Setup
+      </div>
+
+      <!-- Step 1: Deploy if needed -->
+      <div class="setup-step" style="margin-bottom:14px;">
+        <strong>Step 1 — Deploy the contract (one-time).</strong> Run this in your terminal from the <code>contracts/</code> folder:
+        <pre id="deploy-cmd" style="margin-top:8px;background:#050c15;border:1px solid rgba(110,231,247,.1);border-radius:8px;padding:12px;font-family:var(--mono);font-size:.75rem;color:var(--teal);overflow-x:auto;white-space:pre-wrap;word-break:break-all;">forge script script/Deploy.s.sol:Deploy \
+  --rpc-url https://eth-sepolia.g.alchemy.com/v2/lnA-9HmKpg55i2WC3IhBE \
+  --private-key YOUR_WALLET_PRIVATE_KEY \
+  --broadcast \
+  -vvvv</pre>
+        <p style="color:var(--t3);font-size:.75rem;margin-top:6px;">⚠️ Replace <code>YOUR_WALLET_PRIVATE_KEY</code> with your MetaMask private key (export from MetaMask → Account details). Use a testnet-only wallet!</p>
+      </div>
+
+      <!-- Step 2: Enter contract address -->
+      <div class="setup-step">
+        <strong>Step 2 — Paste your deployed contract address here:</strong>
+      </div>
+      <div class="input-row" style="margin-top:10px;">
+        <div class="field">
+          <label class="label" for="contract-addr-input">DataIntegrity Contract Address (Sepolia)</label>
+          <input type="text" id="contract-addr-input" class="input"
+                 placeholder="0x1234...5678 (after forge script deployment)"
+                 spellcheck="false" />
+        </div>
+        <button class="btn btn-ghost" id="save-contract-btn">Save</button>
+      </div>
+      <div class="config-saved hidden" id="config-saved">✅ Contract address saved!</div>
+    </div>
+
+    <!-- ── CONNECT PROMPT (when wallet not connected) ───────────────────── -->
+    <div id="connect-prompt" style="text-align:center;padding:60px 0;">
+      <div style="font-size:3rem;margin-bottom:16px;">🦊</div>
+      <h2 style="font-size:1.4rem;margin-bottom:8px;">Connect Your MetaMask Wallet</h2>
+      <p style="color:var(--t2);margin-bottom:24px;font-size:.9rem;">to start anchoring and verifying file proofs on Sepolia.</p>
+      <button class="btn btn-primary" id="connect-main-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Connect MetaMask
+      </button>
+    </div>
+
+    <!-- ── DAPP PANEL (shown after connect) ─────────────────────────────── -->
+    <div id="dapp-panel" class="hidden">
+
+      <div class="page-grid">
+
+        <!-- ── LEFT: STORE PROOF ─────────────────────────────────────────── -->
+        <div>
+          <div class="section-tag">Write Operation</div>
+          <div class="card" id="store-card">
+            <div class="card-title">
+              <div class="step-num">1</div>
+              Store File Proof On-Chain
+            </div>
+
+            <!-- File drop zone -->
+            <div id="store-drop-zone" class="drop-zone">
+              <input type="file" id="store-file-input" hidden />
+              <div class="drop-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <p class="drop-title">Drop file to hash it</p>
+              <p class="drop-sub">or <button class="link-btn" id="store-browse-btn">browse</button></p>
+            </div>
+
+            <!-- File selected state -->
+            <div id="store-file-info" class="hidden" style="margin-top:14px;">
+              <div style="display:flex;align-items:center;gap:8px;background:rgba(110,231,247,.06);border:1px solid rgba(110,231,247,.15);border-radius:8px;padding:10px 12px;font-size:.85rem;margin-bottom:10px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span id="store-file-name" style="flex:1;font-weight:600;"></span>
+                <span id="store-file-size" style="color:var(--t3);font-family:var(--mono);font-size:.75rem;"></span>
+              </div>
+              <div class="progress-wrap hidden" id="store-progress-wrap">
+                <div class="progress-bar" id="store-progress-bar"></div>
+              </div>
+              <div id="store-hash-display" class="hash-box hidden" style="margin-bottom:12px;">
+                <div class="hash-box-label">SHA-256 Hash (bytes32 ready)</div>
+                <div class="hash-row">
+                  <span class="hash-val" id="store-hash-val"></span>
+                  <button class="copy-btn" id="store-copy-hash">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Label input -->
+            <div class="field" style="margin-top:14px;" id="store-label-group">
+              <label class="label" for="store-label">Label / Filename (optional)</label>
+              <input type="text" id="store-label" class="input" placeholder="e.g. contract_draft_v2.pdf" />
+            </div>
+
+            <!-- Gas estimate -->
+            <div id="gas-estimate-box" class="hidden" style="margin-top:12px;">
+              <div class="alert alert-info" style="font-size:.8rem;">
+                <span class="alert-icon">⛽</span>
+                <span>Estimated gas: <strong id="gas-estimate-val">~68,000</strong> units ≈ <strong id="gas-usd-val">calculating…</strong></span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-full" id="store-btn" disabled style="margin-top:16px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Anchor Proof on Sepolia
+            </button>
+
+            <!-- TX Result -->
+            <div id="store-result" class="hidden"></div>
+
+            <button class="btn btn-ghost btn-full btn-sm hidden" id="store-reset-btn" style="margin-top:8px;">
+              Hash Another File
+            </button>
+          </div>
+        </div>
+
+        <!-- ── RIGHT: VERIFY PROOF ───────────────────────────────────────── -->
+        <div>
+          <div class="section-tag">Read Operation (Free — No Gas)</div>
+          <div class="card" id="verify-card">
+            <div class="card-title">
+              <div class="step-num">2</div>
+              Verify File Integrity On-Chain
+            </div>
+
+            <!-- Verify by file -->
+            <div style="margin-bottom:18px;">
+              <div style="font-size:.8rem;color:var(--t2);margin-bottom:10px;font-weight:500;">
+                Option A — Drop the file (auto-hashes and queries):
+              </div>
+              <div id="verify-drop-zone" class="drop-zone" style="padding:24px 20px;">
+                <input type="file" id="verify-file-input" hidden />
+                <div class="drop-icon" style="margin-bottom:6px;">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                </div>
+                <p class="drop-title" style="font-size:.88rem;">Drop file to verify</p>
+                <p class="drop-sub" style="font-size:.78rem;">or <button class="link-btn" id="verify-browse-btn">browse</button></p>
+              </div>
+            </div>
+
+            <hr class="sep" style="margin:14px 0;" />
+
+            <!-- Verify by hash -->
+            <div style="font-size:.8rem;color:var(--t2);margin-bottom:10px;font-weight:500;">
+              Option B — Paste a SHA-256 hash directly:
+            </div>
+            <div class="field" style="margin-bottom:12px;">
+              <label class="label" for="verify-hash-input">Hash (0x + 64 hex chars)</label>
+              <input type="text" id="verify-hash-input" class="input"
+                     placeholder="0x3a4b5c6d…"
+                     spellcheck="false" />
+            </div>
+            <button class="btn btn-ghost btn-full" id="verify-btn" disabled>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Query Contract
+            </button>
+
+            <!-- Verify result -->
+            <div id="verify-result" class="hidden"></div>
+
+            <!-- Verify file progress -->
+            <div class="progress-wrap hidden" id="verify-progress-wrap" style="margin-top:10px;">
+              <div class="progress-bar" id="verify-progress-bar"></div>
+            </div>
+          </div>
+
+          <!-- ── RECENT EVENTS ──────────────────────────────────────────── -->
+          <div style="margin-top:20px;">
+            <div class="section-tag">Activity Log</div>
+            <div class="event-log" id="event-log">
+              <div class="log-entry log-info">[PODIP] dApp ready. Connect wallet to begin.</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /page-grid -->
+
+    </div><!-- /dapp-panel -->
+
+  </div><!-- /wrap -->
+</main>
+
+<script>
+/* ============================================================
+   PODIP Live dApp — ethers.js v6 + MetaMask integration
+   ============================================================ */
+'use strict';
+
+// ── ABI (extracted from Foundry compiled artifact) ──────────────────────────
+const CONTRACT_ABI = [
+  { "type":"function","name":"storeProof",
+    "inputs":[{"name":"hash","type":"bytes32"},{"name":"filename","type":"string"}],
+    "outputs":[],"stateMutability":"nonpayable" },
+  { "type":"function","name":"verifyProof",
+    "inputs":[{"name":"hash","type":"bytes32"}],
+    "outputs":[{"name":"","type":"bool"}],"stateMutability":"view" },
+  { "type":"function","name":"getProofRecord",
+    "inputs":[{"name":"hash","type":"bytes32"}],
+    "outputs":[{"name":"","type":"tuple","components":[
+      {"name":"timestamp","type":"uint256"},
+      {"name":"uploader", "type":"address"},
+      {"name":"filename", "type":"string"}
+    ]}],"stateMutability":"view" },
+  { "type":"function","name":"getTimestamp",
+    "inputs":[{"name":"hash","type":"bytes32"}],
+    "outputs":[{"name":"","type":"uint256"}],"stateMutability":"view" },
+  { "type":"event","name":"ProofStored",
+    "inputs":[
+      {"name":"hash",      "type":"bytes32","indexed":true},
+      {"name":"uploader",  "type":"address","indexed":true},
+      {"name":"timestamp", "type":"uint256","indexed":false},
+      {"name":"filename",  "type":"string", "indexed":false}
+    ],"anonymous":false },
+  { "type":"error","name":"DuplicateProof","inputs":[{"name":"hash","type":"bytes32"}] },
+  { "type":"error","name":"ProofNotFound", "inputs":[{"name":"hash","type":"bytes32"}] }
+];
+
+const SEPOLIA_CHAIN_ID = 11155111n;
+const SEPOLIA_CHAIN_ID_HEX = '0xaa36a7';
+const ETHERSCAN  = 'https://sepolia.etherscan.io';
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let provider     = null;
+let signer       = null;
+let contract     = null;
+let walletAddr   = null;
+let contractAddr = localStorage.getItem('podip_contract_addr') || '';
+let storeHash    = null;   // current file hash waiting to be stored
+let storeFilename = '';
+
+// ── ELEMENTS ─────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const connectBtn       = $('connect-btn');
+const connectMainBtn   = $('connect-main-btn');
+const disconnectBtn    = $('disconnect-btn');
+const walletBar        = $('wallet-bar');
+const walletAddrEl     = $('wallet-addr');
+const walletBalEl      = $('wallet-balance');
+const dappPanel        = $('dapp-panel');
+const connectPrompt    = $('connect-prompt');
+const noMetaMask       = $('no-metamask');
+const wrongNetwork     = $('wrong-network');
+const networkName      = $('network-name');
+const switchNetworkBtn = $('switch-network-btn');
+const contractInput    = $('contract-addr-input');
+const saveContractBtn  = $('save-contract-btn');
+const configSaved      = $('config-saved');
+const storeDropZone    = $('store-drop-zone');
+const storeFileInput   = $('store-file-input');
+const storeBrowseBtn   = $('store-browse-btn');
+const storeFileInfo    = $('store-file-info');
+const storeFileName    = $('store-file-name');
+const storeFileSize    = $('store-file-size');
+const storeProgressWrap = $('store-progress-wrap');
+const storeProgressBar  = $('store-progress-bar');
+const storeHashDisplay  = $('store-hash-display');
+const storeHashVal      = $('store-hash-val');
+const storeCopyHash     = $('store-copy-hash');
+const storeBtn          = $('store-btn');
+const storeResult       = $('store-result');
+const storeResetBtn     = $('store-reset-btn');
+const storeLabel        = $('store-label');
+const gasEstimateBox    = $('gas-estimate-box');
+const gasEstimateVal    = $('gas-estimate-val');
+const gasUsdVal         = $('gas-usd-val');
+const verifyDropZone    = $('verify-drop-zone');
+const verifyFileInput   = $('verify-file-input');
+const verifyBrowseBtn   = $('verify-browse-btn');
+const verifyHashInput   = $('verify-hash-input');
+const verifyBtn         = $('verify-btn');
+const verifyResult      = $('verify-result');
+const verifyProgressWrap = $('verify-progress-wrap');
+const verifyProgressBar  = $('verify-progress-bar');
+const eventLog           = $('event-log');
+
+// ── LOGGING ──────────────────────────────────────────────────────────────────
+function log(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = `log-entry ${type ? 'log-' + type : ''}`;
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  eventLog.appendChild(el);
+  eventLog.scrollTop = eventLog.scrollHeight;
+}
+
+// ── CONTRACT ADDRESS ─────────────────────────────────────────────────────────
+if (contractAddr) contractInput.value = contractAddr;
+
+saveContractBtn.addEventListener('click', () => {
+  const val = contractInput.value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(val)) {
+    log('Invalid contract address format.', 'err');
+    return;
+  }
+  contractAddr = val;
+  localStorage.setItem('podip_contract_addr', val);
+  configSaved.classList.remove('hidden');
+  setTimeout(() => configSaved.classList.add('hidden'), 3000);
+  if (signer) initContract();
+  log(`Contract address set: ${val}`, 'info');
+});
+
+function initContract() {
+  if (!contractAddr || !signer) return;
+  contract = new ethers.Contract(contractAddr, CONTRACT_ABI, signer);
+  log(`Contract bound at ${contractAddr}`, 'ok');
+  updateStoreBtn();
+}
+
+// ── WALLET CONNECTION ────────────────────────────────────────────────────────
+async function connectWallet() {
+  if (!window.ethereum) {
+    noMetaMask.classList.remove('hidden');
+    log('MetaMask not found.', 'err');
+    return;
+  }
+
+  try {
+    connectBtn.disabled = true;
+    connectBtn.innerHTML = spinner('Connecting…');
+    log('Requesting wallet access…', 'info');
+
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer   = await provider.getSigner();
+    walletAddr = await signer.getAddress();
+
+    await checkNetwork();
+    await refreshBalance();
+    initContract();
+    showConnected();
+
+    log(`Wallet connected: ${walletAddr}`, 'ok');
+  } catch (e) {
+    log(`Connection failed: ${e.message}`, 'err');
+    connectBtn.disabled = false;
+    connectBtn.innerHTML = svgWallet() + ' Connect Wallet';
+  }
+}
+
+async function checkNetwork() {
+  const network = await provider.getNetwork();
+  const chainId = network.chainId;
+
+  if (chainId === SEPOLIA_CHAIN_ID) {
+    networkName.textContent = 'Sepolia Testnet';
+    wrongNetwork.classList.add('hidden');
+    return true;
+  } else {
+    networkName.textContent = `Chain ${chainId} (wrong)`;
+    wrongNetwork.classList.remove('hidden');
+    return false;
+  }
+}
+
+async function refreshBalance() {
+  try {
+    const bal = await provider.getBalance(walletAddr);
+    const eth = parseFloat(ethers.formatEther(bal)).toFixed(4);
+    walletBalEl.textContent = `${eth} ETH`;
+  } catch (_) {}
+}
+
+function showConnected() {
+  walletBar.classList.remove('hidden');
+  connectPrompt.classList.add('hidden');
+  dappPanel.classList.remove('hidden');
+  walletAddrEl.textContent = truncate(walletAddr);
+  connectBtn.innerHTML = '✓ Connected';
+  connectBtn.disabled = true;
+}
+
+function disconnectWallet() {
+  provider = signer = contract = walletAddr = null;
+  storeHash = null;
+  walletBar.classList.add('hidden');
+  dappPanel.classList.add('hidden');
+  connectPrompt.classList.remove('hidden');
+  connectBtn.disabled = false;
+  connectBtn.innerHTML = svgWallet() + ' Connect Wallet';
+  networkName.textContent = 'Not connected';
+  log('Wallet disconnected.', 'warn');
+}
+
+// Listen for account/network changes
+if (window.ethereum) {
+  window.ethereum.on('accountsChanged', (accounts) => {
+    if (accounts.length === 0) disconnectWallet();
+    else connectWallet();
+  });
+  window.ethereum.on('chainChanged', () => window.location.reload());
+}
+
+switchNetworkBtn.addEventListener('click', async () => {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }]
+    });
+  } catch (e) {
+    if (e.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: SEPOLIA_CHAIN_ID_HEX,
+          chainName: 'Sepolia Testnet',
+          rpcUrls: ['https://rpc.sepolia.org'],
+          nativeCurrency: { name: 'SepoliaETH', symbol: 'ETH', decimals: 18 },
+          blockExplorerUrls: ['https://sepolia.etherscan.io']
+        }]
+      });
+    }
+  }
+});
+
+connectBtn.addEventListener('click', connectWallet);
+connectMainBtn.addEventListener('click', connectWallet);
+disconnectBtn.addEventListener('click', disconnectWallet);
+
+// ── SHA-256 HASHING ──────────────────────────────────────────────────────────
+async function hashFile(file, onProgress) {
+  const CHUNK = 2 * 1024 * 1024;
+  const totalChunks = Math.ceil(file.size / CHUNK) || 1;
+  const parts = [];
+
+  for (let i = 0; i < totalChunks; i++) {
+    const blob = file.slice(i * CHUNK, Math.min((i + 1) * CHUNK, file.size));
+    parts.push(new Uint8Array(await blob.arrayBuffer()));
+    onProgress && onProgress((i + 1) / totalChunks);
+  }
+
+  const total = parts.reduce((s, p) => s + p.length, 0);
+  const buf   = new Uint8Array(total);
+  let off = 0;
+  for (const p of parts) { buf.set(p, off); off += p.length; }
+
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return '0x' + Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function formatBytes(b) {
+  if (!b) return '0 B';
+  const k = 1024, s = ['B','KB','MB','GB'], i = Math.floor(Math.log(b) / Math.log(k));
+  return (b / k**i).toFixed(2) + ' ' + s[i];
+}
+
+// ── STORE: FILE DROP ─────────────────────────────────────────────────────────
+storeBrowseBtn.addEventListener('click', () => storeFileInput.click());
+storeDropZone.addEventListener('click', e => { if (e.target !== storeBrowseBtn) storeFileInput.click(); });
+storeDropZone.addEventListener('dragover', e => { e.preventDefault(); storeDropZone.classList.add('drag'); });
+['dragleave','dragend'].forEach(ev => storeDropZone.addEventListener(ev, () => storeDropZone.classList.remove('drag')));
+storeDropZone.addEventListener('drop', e => {
+  e.preventDefault(); storeDropZone.classList.remove('drag');
+  if (e.dataTransfer.files.length) processStoreFile(e.dataTransfer.files[0]);
+});
+storeFileInput.addEventListener('change', () => {
+  if (storeFileInput.files.length) processStoreFile(storeFileInput.files[0]);
+});
+
+async function processStoreFile(file) {
+  storeDropZone.classList.add('hidden');
+  storeFileInfo.classList.remove('hidden');
+  storeProgressWrap.classList.remove('hidden');
+  storeProgressBar.style.width = '0%';
+  storeHashDisplay.classList.add('hidden');
+  storeFileName.textContent = file.name;
+  storeFileSize.textContent = formatBytes(file.size);
+  storeLabel.value = file.name;
+  storeHash = null;
+  updateStoreBtn();
+
+  log(`Hashing: ${file.name} (${formatBytes(file.size)})…`);
+
+  const hash = await hashFile(file, p => { storeProgressBar.style.width = (p * 100).toFixed(0) + '%'; });
+  storeHash = hash;
+  storeFilename = file.name;
+
+  storeProgressBar.style.width = '100%';
+  setTimeout(() => storeProgressWrap.classList.add('hidden'), 500);
+
+  storeHashDisplay.classList.remove('hidden');
+  storeHashVal.textContent = hash;
+  log(`Hash computed: ${hash.slice(0,18)}…`, 'ok');
+
+  updateStoreBtn();
+  await estimateGas();
+}
+
+function updateStoreBtn() {
+  storeBtn.disabled = !(storeHash && contract && contractAddr);
+  if (!contractAddr) {
+    storeBtn.title = 'Set contract address above first';
+  } else if (!storeHash) {
+    storeBtn.title = 'Drop a file to hash it first';
+  } else {
+    storeBtn.title = '';
+  }
+}
+
+async function estimateGas() {
+  if (!contract || !storeHash) return;
+  try {
+    gasEstimateBox.classList.remove('hidden');
+    const est = await contract.storeProof.estimateGas(storeHash, storeFilename || '');
+    gasEstimateVal.textContent = Number(est).toLocaleString();
+    // Rough USD: gasPrice ~10 gwei, ETH ~$2000
+    const gp = await provider.getFeeData();
+    const gweiPrice = Number(ethers.formatUnits(gp.gasPrice || 0n, 'gwei'));
+    const usd = (Number(est) * gweiPrice * 1e-9 * 2000).toFixed(4);
+    gasUsdVal.textContent = `~$${usd}`;
+  } catch(e) {
+    // may fail if already stored
+    gasEstimateBox.classList.remove('hidden');
+    gasEstimateVal.textContent = '~68,000';
+    gasUsdVal.textContent = '(estimate unavailable)';
+  }
+}
+
+// ── STORE: SUBMIT TX ─────────────────────────────────────────────────────────
+storeBtn.addEventListener('click', async () => {
+  if (!contract || !storeHash || !contractAddr) return;
+
+  const label = storeLabel.value.trim() || storeFilename || '<unlabeled>';
+
+  storeBtn.disabled = true;
+  storeBtn.innerHTML = spinner('Sending transaction…');
+  storeResult.classList.add('hidden');
+  log(`Submitting storeProof(${storeHash.slice(0,18)}…, "${label}")…`, 'info');
+
+  try {
+    const tx = await contract.storeProof(storeHash, label);
+    log(`Tx submitted: ${tx.hash}`, 'info');
+    storeBtn.innerHTML = spinner('Waiting for confirmation…');
+
+    const receipt = await tx.wait(1);
+
+    if (receipt.status === 1) {
+      log(`✅ Proof anchored! Block #${receipt.blockNumber}`, 'ok');
+      storeResult.innerHTML = buildTxSuccess(tx.hash, receipt, label, storeHash);
+      storeResult.classList.remove('hidden');
+      storeResetBtn.classList.remove('hidden');
+      await refreshBalance();
+    } else {
+      throw new Error('Transaction reverted (status 0)');
+    }
+  } catch (e) {
+    const msg = parseError(e);
+    log(`❌ ${msg}`, 'err');
+    storeResult.innerHTML = buildTxFailed(msg);
+    storeResult.classList.remove('hidden');
+  } finally {
+    storeBtn.disabled = false;
+    storeBtn.innerHTML = `${svgUpload()} Anchor Proof on Sepolia`;
+  }
+});
+
+function buildTxSuccess(hash, receipt, label, fileHash) {
+  return `
+  <div class="tx-result tx-success">
+    <div class="tx-title" style="color:var(--green);">✅ Proof Anchored on Ethereum!</div>
+    <div class="tx-meta">
+      <div class="tx-row">
+        <span class="tx-key">Tx Hash</span>
+        <span class="tx-val">
+          <a class="tx-link" href="${ETHERSCAN}/tx/${hash}" target="_blank">${hash}</a>
+        </span>
+      </div>
+      <div class="tx-row">
+        <span class="tx-key">Block</span>
+        <span class="tx-val">
+          <a class="tx-link" href="${ETHERSCAN}/block/${receipt.blockNumber}" target="_blank">#${receipt.blockNumber.toLocaleString()}</a>
+        </span>
+      </div>
+      <div class="tx-row">
+        <span class="tx-key">Gas Used</span>
+        <span class="tx-val">${Number(receipt.gasUsed).toLocaleString()} units</span>
+      </div>
+      <div class="tx-row">
+        <span class="tx-key">Label</span>
+        <span class="tx-val">${escHtml(label)}</span>
+      </div>
+      <div class="tx-row">
+        <span class="tx-key">SHA-256</span>
+        <span class="tx-val" style="color:var(--teal);word-break:break-all;">${fileHash}</span>
+      </div>
+      <div class="tx-row">
+        <span class="tx-key">Verify</span>
+        <span class="tx-val">Paste hash in the Verify panel →</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildTxFailed(msg) {
+  return `<div class="tx-result tx-failed"><div class="tx-title" style="color:var(--red);">❌ Transaction Failed</div><div style="font-size:.83rem;color:var(--t2)">${escHtml(msg)}</div></div>`;
+}
+
+storeResetBtn.addEventListener('click', () => {
+  storeDropZone.classList.remove('hidden');
+  storeFileInfo.classList.add('hidden');
+  storeHashDisplay.classList.add('hidden');
+  storeResult.classList.add('hidden');
+  storeResetBtn.classList.add('hidden');
+  gasEstimateBox.classList.add('hidden');
+  storeFileInput.value = '';
+  storeHash = null;
+  updateStoreBtn();
+});
+
+// Copy hash button
+storeCopyHash.addEventListener('click', async () => {
+  if (!storeHash) return;
+  await navigator.clipboard.writeText(storeHash).catch(() => {});
+  storeCopyHash.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+  setTimeout(() => {
+    storeCopyHash.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+  }, 2000);
+});
+
+// ── VERIFY: FILE DROP ────────────────────────────────────────────────────────
+verifyBrowseBtn.addEventListener('click', () => verifyFileInput.click());
+verifyDropZone.addEventListener('click', e => { if(e.target !== verifyBrowseBtn) verifyFileInput.click(); });
+verifyDropZone.addEventListener('dragover', e => { e.preventDefault(); verifyDropZone.classList.add('drag'); });
+['dragleave','dragend'].forEach(ev => verifyDropZone.addEventListener(ev, () => verifyDropZone.classList.remove('drag')));
+verifyDropZone.addEventListener('drop', e => {
+  e.preventDefault(); verifyDropZone.classList.remove('drag');
+  if (e.dataTransfer.files.length) processVerifyFile(e.dataTransfer.files[0]);
+});
+verifyFileInput.addEventListener('change', () => {
+  if (verifyFileInput.files.length) processVerifyFile(verifyFileInput.files[0]);
+});
+
+async function processVerifyFile(file) {
+  verifyResult.classList.add('hidden');
+  verifyProgressWrap.classList.remove('hidden');
+  verifyProgressBar.style.width = '0%';
+  log(`Hashing ${file.name} for verification…`);
+
+  const hash = await hashFile(file, p => { verifyProgressBar.style.width = (p*100).toFixed(0)+'%'; });
+  verifyProgressBar.style.width = '100%';
+  setTimeout(() => verifyProgressWrap.classList.add('hidden'), 500);
+
+  verifyHashInput.value = hash;
+  log(`Hash: ${hash.slice(0,18)}…`, 'ok');
+  await runVerify(hash);
+}
+
+// ── VERIFY: HASH INPUT ───────────────────────────────────────────────────────
+verifyHashInput.addEventListener('input', () => {
+  const v = verifyHashInput.value.trim();
+  verifyBtn.disabled = !(/^0x[0-9a-fA-F]{64}$/.test(v)) || !contract;
+});
+
+verifyBtn.addEventListener('click', async () => {
+  const h = verifyHashInput.value.trim();
+  if (!h || !contract) return;
+  await runVerify(h);
+});
+
+async function runVerify(hash) {
+  verifyBtn.disabled = true;
+  verifyBtn.innerHTML = spinner('Querying contract…');
+  verifyResult.classList.add('hidden');
+  log(`verifyProof(${hash.slice(0,18)}…)…`, 'info');
+
+  try {
+    const exists = await contract.verifyProof(hash);
+    if (exists) {
+      const rec = await contract.getProofRecord(hash);
+      const ts  = Number(rec.timestamp);
+      const dt  = new Date(ts * 1000).toUTCString();
+      log(`✅ Proof found! Stored at ${dt}`, 'ok');
+      verifyResult.innerHTML = buildVerifyFound(hash, rec, ts, dt);
+    } else {
+      log('❌ Hash not found on-chain.', 'warn');
+      verifyResult.innerHTML = buildVerifyNotFound(hash);
+    }
+    verifyResult.classList.remove('hidden');
+  } catch (e) {
+    const msg = parseError(e);
+    log(`Error querying: ${msg}`, 'err');
+    verifyResult.innerHTML = buildTxFailed('Query failed: ' + msg);
+    verifyResult.classList.remove('hidden');
+  } finally {
+    verifyBtn.disabled = false;
+    verifyBtn.innerHTML = svgSearch() + ' Query Contract';
+  }
+}
+
+function buildVerifyFound(hash, rec, ts, dt) {
+  return `
+  <div class="proof-record proof-found" style="margin-top:14px;">
+    <div class="proof-title" style="color:var(--green);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+      VERIFIED — Proof exists on-chain
+    </div>
+    <div class="proof-rows">
+      <div class="proof-row">
+        <span class="proof-key">Stored At</span>
+        <span class="proof-val">${dt}</span>
+      </div>
+      <div class="proof-row">
+        <span class="proof-key">Unix Time</span>
+        <span class="proof-val">${ts}</span>
+      </div>
+      <div class="proof-row">
+        <span class="proof-key">Uploader</span>
+        <span class="proof-val">
+          <a href="${ETHERSCAN}/address/${rec.uploader}" target="_blank" style="color:var(--teal);">${rec.uploader}</a>
+        </span>
+      </div>
+      <div class="proof-row">
+        <span class="proof-key">Filename</span>
+        <span class="proof-val">${escHtml(rec.filename) || '<none>'}</span>
+      </div>
+      <div class="proof-row">
+        <span class="proof-key">SHA-256</span>
+        <span class="proof-val" style="color:var(--teal);word-break:break-all;">${hash}</span>
+      </div>
+      <div class="proof-row">
+        <span class="proof-key">Contract</span>
+        <span class="proof-val">
+          <a href="${ETHERSCAN}/address/${contractAddr}" target="_blank" style="color:var(--teal);">${contractAddr}</a>
+        </span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildVerifyNotFound(hash) {
+  return `
+  <div class="proof-record proof-not-found" style="margin-top:14px;">
+    <div class="proof-title" style="color:var(--red);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      NOT FOUND — No proof for this hash
+    </div>
+    <div style="font-size:.83rem;color:var(--t2);line-height:1.6;">
+      <p style="margin-bottom:6px;">Hash: <code style="font-size:.75rem;word-break:break-all;">${hash}</code></p>
+      <p>Possible reasons:</p>
+      <ul style="padding-left:16px;margin-top:4px;color:var(--t3);">
+        <li>File was never stored via this contract</li>
+        <li>File was modified since being stored</li>
+        <li>You're querying a different contract address</li>
+      </ul>
+    </div>
+  </div>`;
+}
+
+// ── ERROR PARSING ─────────────────────────────────────────────────────────────
+function parseError(e) {
+  if (e?.reason) return e.reason;
+  if (e?.message?.includes('DuplicateProof'))
+    return 'DuplicateProof: This file hash is already anchored on-chain. Each hash can only be stored once.';
+  if (e?.message?.includes('user rejected'))
+    return 'Transaction rejected by user.';
+  if (e?.message?.includes('insufficient funds'))
+    return 'Insufficient Sepolia ETH. Get some from sepoliafaucet.com.';
+  return e?.shortMessage || e?.message || 'Unknown error';
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function truncate(addr) { return addr.slice(0,8)+'…'+addr.slice(-6); }
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function spinner(text) {
+  return `<svg class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ${text}`;
+}
+function svgWallet() {
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
+}
+function svgUpload() {
+  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
+}
+function svgSearch() {
+  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
+}
+
+// spinner style  
+const st = document.createElement('style');
+st.textContent = `@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}.spin{animation:spin .9s linear infinite;display:inline-block;vertical-align:middle;}`;
+document.head.appendChild(st);
+
+// ── AUTO-DETECT METAMASK ON LOAD ──────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  if (!window.ethereum) {
+    noMetaMask.classList.remove('hidden');
+    return;
+  }
+  // Check if already connected
+  const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+  if (accounts.length > 0) {
+    connectWallet();
+  }
+});
+</script>
+</body>
+</html>

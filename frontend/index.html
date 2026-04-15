@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PODIP — Proof of Data Integrity Protocol</title>
+  <meta name="description" content="Anchor SHA-256 file hashes on Ethereum. Prove a file existed, unchanged, at a specific point in time — without storing any contents on-chain." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── NAVBAR ─────────────────────────────────────────────────────────── -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo" id="nav-logo-link">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="url(#logo-grad)" stroke-width="1.5" fill="none"/>
+          <path d="M14 7L21 11V17L14 21L7 17V11L14 7Z" fill="url(#logo-fill)" opacity="0.3"/>
+          <path d="M14 10L18 12.5V17L14 19.5L10 17V12.5L14 10Z" fill="url(#logo-fill)"/>
+          <defs>
+            <linearGradient id="logo-grad" x1="2" y1="2" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6EE7F7"/>
+              <stop offset="1" stop-color="#A78BFA"/>
+            </linearGradient>
+            <linearGradient id="logo-fill" x1="7" y1="7" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6EE7F7"/>
+              <stop offset="1" stop-color="#A78BFA"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>PODIP</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#demo">Live Demo</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#security">Security</a></li>
+        <li><a href="#gas">Gas Costs</a></li>
+      </ul>
+      <a href="https://github.com" target="_blank" class="btn btn-ghost nav-cta" id="nav-github-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        GitHub
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── HERO ───────────────────────────────────────────────────────────── -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <canvas id="network-canvas"></canvas>
+      <div class="hero-glow glow-teal"></div>
+      <div class="hero-glow glow-purple"></div>
+    </div>
+    <div class="container hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Live on Ethereum Sepolia Testnet
+      </div>
+      <h1 class="hero-title">
+        Prove Your Data Never Changed
+        <span class="gradient-text">On the Blockchain</span>
+      </h1>
+      <p class="hero-subtitle">
+        PODIP anchors SHA-256 file hashes on Ethereum — creating an immutable, 
+        timestamped record of your file's existence without storing any contents on-chain.
+      </p>
+      <div class="hero-ctas">
+        <a href="#demo" class="btn btn-primary" id="hero-demo-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+          Try Live Demo
+        </a>
+        <a href="#how-it-works" class="btn btn-ghost" id="hero-learn-btn">
+          Learn How It Works
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-value">~68K</span>
+          <span class="stat-label">Gas per proof</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value">~$0.014</span>
+          <span class="stat-label">Cost at $2K ETH</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value">SHA-256</span>
+          <span class="stat-label">Hash algorithm</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value">Free</span>
+          <span class="stat-label">Verification cost</span>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <div class="scroll-wheel"></div>
+    </div>
+  </section>
+
+  <!-- ── HOW IT WORKS ───────────────────────────────────────────────────── -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Protocol</span>
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">
+          Two operations. Zero data on-chain. Complete auditability.
+        </p>
+      </div>
+
+      <div class="flow-tabs">
+        <button class="flow-tab active" id="tab-store" data-tab="store">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Store Proof
+        </button>
+        <button class="flow-tab" id="tab-verify" data-tab="verify">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Verify File
+        </button>
+      </div>
+
+      <div class="flow-diagram" id="flow-store">
+        <div class="flow-steps">
+          <div class="flow-step" style="--delay: 0s">
+            <div class="step-icon step-icon-file">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="step-content">
+              <h4>1. Your File</h4>
+              <p>Any file: PDF, CSV, image, log — stays 100% on your machine.</p>
+            </div>
+          </div>
+          <div class="flow-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="flow-step" style="--delay: 0.1s">
+            <div class="step-icon step-icon-hash">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+            </div>
+            <div class="step-content">
+              <h4>2. SHA-256 Hash</h4>
+              <p>Streamed in 64 KiB chunks. Produces a unique 32-byte fingerprint.</p>
+              <code class="inline-hash">0x3a4b5c6d7e8f...</code>
+            </div>
+          </div>
+          <div class="flow-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="flow-step" style="--delay: 0.2s">
+            <div class="step-icon step-icon-sign">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="step-content">
+              <h4>3. Sign &amp; Broadcast</h4>
+              <p>ECDSA secp256k1 signature. Sent to Sepolia via HTTPS RPC.</p>
+            </div>
+          </div>
+          <div class="flow-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="flow-step" style="--delay: 0.3s">
+            <div class="step-icon step-icon-chain">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <div class="step-content">
+              <h4>4. On-Chain Record</h4>
+              <p>Immutable. Timestamped. <code>bytes32 → ProofRecord</code> in the contract.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="terminal-block">
+          <div class="terminal-header">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <span class="terminal-title">podip store ./contract_draft.pdf</span>
+          </div>
+          <div class="terminal-body" id="store-terminal">
+            <div class="term-line"><span class="term-key">📂 File    :</span> <span class="term-val">./contract_draft.pdf</span></div>
+            <div class="term-line"><span class="term-key">🏷️ Label   :</span> <span class="term-val">contract_draft.pdf</span></div>
+            <div class="term-line"><span class="term-key">🔑 SHA-256 :</span> <span class="term-val term-hash">0x3a4b5c6d8f1e9a2b7c4d5e6f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9</span></div>
+            <div class="term-line"><span class="term-key">🔗 Wallet  :</span> <span class="term-val">0xAbCd...1234</span></div>
+            <div class="term-line"><span class="term-key">📡 Network :</span> <span class="term-val">https://eth-sepolia.g.alchemy.com/v2/...</span></div>
+            <div class="term-line"><span class="term-key">📜 Contract:</span> <span class="term-val">0x1234...5678</span></div>
+            <div class="term-line term-emphasis">⏳ Sending transaction…</div>
+            <div class="term-line term-blank"></div>
+            <div class="term-line term-success">✅ Proof anchored on Ethereum!</div>
+            <div class="term-line">    <span class="term-key">Tx Hash :</span> <span class="term-val term-hash">0x9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8</span></div>
+            <div class="term-line">    <span class="term-key">Block   :</span> <span class="term-val">#5812340</span></div>
+            <div class="term-line">    <span class="term-key">Gas used:</span> <span class="term-val">68,423</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-diagram hidden" id="flow-verify">
+        <div class="flow-steps">
+          <div class="flow-step" style="--delay: 0s">
+            <div class="step-icon step-icon-file">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="step-content">
+              <h4>1. Local File</h4>
+              <p>Hash the same file on your machine to get its fingerprint.</p>
+            </div>
+          </div>
+          <div class="flow-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="flow-step" style="--delay: 0.1s">
+            <div class="step-icon step-icon-hash">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+            </div>
+            <div class="step-content">
+              <h4>2. Compute Hash</h4>
+              <p>SHA-256 digest. Even one byte changed → completely different hash.</p>
+            </div>
+          </div>
+          <div class="flow-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="flow-step" style="--delay: 0.2s">
+            <div class="step-icon step-icon-chain">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </div>
+            <div class="step-content">
+              <h4>3. Query Contract</h4>
+              <p>Free <code>view</code> call. No gas. No wallet needed for verification.</p>
+            </div>
+          </div>
+          <div class="flow-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="flow-step" style="--delay: 0.3s">
+            <div class="step-icon step-icon-shield">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
+            <div class="step-content">
+              <h4>4. Result</h4>
+              <p>✅ Verified with timestamp &amp; uploader — or ❌ proof not found.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="terminal-block">
+          <div class="terminal-header">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <span class="terminal-title">podip verify ./contract_draft.pdf</span>
+          </div>
+          <div class="terminal-body">
+            <div class="term-line"><span class="term-key">📂 File    :</span> <span class="term-val">./contract_draft.pdf</span></div>
+            <div class="term-line"><span class="term-key">🔑 SHA-256 :</span> <span class="term-val term-hash">0x3a4b5c6d8f1e9a2b7c4d5e6f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9</span></div>
+            <div class="term-line"><span class="term-key">📡 Querying contract at 0x1234...5678…</span></div>
+            <div class="term-line term-blank"></div>
+            <div class="term-line term-success">✅ VERIFIED — proof exists on-chain</div>
+            <div class="term-line">    <span class="term-key">Stored at :</span> <span class="term-val">2024-11-15 14:23:07 UTC (1731677387 unix)</span></div>
+            <div class="term-line">    <span class="term-key">Uploader  :</span> <span class="term-val">0xAbCd...1234</span></div>
+            <div class="term-line">    <span class="term-key">Filename  :</span> <span class="term-val">contract_draft.pdf</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── LIVE DEMO ──────────────────────────────────────────────────────── -->
+  <section class="section section-dark" id="demo">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Interactive</span>
+        <h2 class="section-title">Live Demo</h2>
+        <p class="section-subtitle">
+          Drop any file below to compute its SHA-256 hash right in your browser — 
+          no data ever leaves your machine.
+        </p>
+      </div>
+
+      <div class="demo-layout">
+        <!-- Hash Computer -->
+        <div class="demo-card" id="demo-hash-card">
+          <div class="card-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+            Compute SHA-256 Hash
+          </div>
+
+          <div class="drop-zone" id="drop-zone">
+            <input type="file" id="file-input" hidden />
+            <div class="drop-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <p class="drop-title">Drop a file here</p>
+            <p class="drop-sub">or <button class="link-btn" id="browse-btn">browse to choose</button></p>
+            <p class="drop-note">All hashing happens in your browser — file contents are never uploaded.</p>
+          </div>
+
+          <div class="hash-result hidden" id="hash-result">
+            <div class="result-file">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span id="file-name-display">file.pdf</span>
+              <span id="file-size-display" class="file-size"></span>
+            </div>
+            <div class="progress-bar-wrap hidden" id="progress-wrap">
+              <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="hash-output" id="hash-output">
+              <label class="output-label">SHA-256 Hash</label>
+              <div class="hash-string-wrap">
+                <code class="hash-string" id="hash-string">Computing…</code>
+                <button class="copy-btn" id="copy-btn" title="Copy to clipboard">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+              </div>
+              <div class="hash-meta" id="hash-meta"></div>
+            </div>
+            <button class="btn btn-secondary btn-full" id="reset-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.6"/></svg>
+              Hash Another File
+            </button>
+          </div>
+        </div>
+
+        <!-- Simulated Verification -->
+        <div class="demo-card" id="demo-verify-card">
+          <div class="card-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Simulate Blockchain Verify
+          </div>
+          <p class="card-desc">Paste any SHA-256 hash to simulate a contract lookup against our sample on-chain records.</p>
+
+          <div class="verify-form">
+            <div class="input-group">
+              <label for="verify-hash-input" class="input-label">Hash to verify (0x...)</label>
+              <input 
+                type="text" 
+                id="verify-hash-input" 
+                class="hash-input"
+                placeholder="0x3a4b5c6d8f1e9a2b7c4d5e6f..."
+                spellcheck="false"
+              />
+            </div>
+            <div class="quick-fill">
+              <span class="quick-fill-label">Try an example:</span>
+              <button class="quick-btn" id="quick-found" data-hash="0x3a4b5c6d8f1e9a2b7c4d5e6f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b">contract_draft.pdf</button>
+              <button class="quick-btn" id="quick-not-found" data-hash="0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef">unknown file</button>
+            </div>
+            <button class="btn btn-primary btn-full" id="verify-btn" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Verify on Simulated Chain
+            </button>
+          </div>
+
+          <div class="verify-result hidden" id="verify-result">
+            <div class="verify-status" id="verify-status-box">
+              <div class="status-icon" id="verify-status-icon"></div>
+              <div class="status-text" id="verify-status-text"></div>
+            </div>
+            <div class="verify-details hidden" id="verify-details">
+              <div class="detail-row">
+                <span class="detail-label">Stored at</span>
+                <span class="detail-val" id="detail-timestamp"></span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Uploader</span>
+                <span class="detail-val" id="detail-uploader"></span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Filename</span>
+                <span class="detail-val" id="detail-filename"></span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Block</span>
+                <span class="detail-val" id="detail-block"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ARCHITECTURE ───────────────────────────────────────────────────── -->
+  <section class="section" id="architecture">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Technical</span>
+        <h2 class="section-title">Architecture</h2>
+        <p class="section-subtitle">
+          Three clean layers — CLI, Rust backend, and Solidity contract.
+        </p>
+      </div>
+
+      <div class="arch-diagram">
+        <div class="arch-layer arch-layer-cli">
+          <div class="arch-label">CLI (podip)</div>
+          <div class="arch-commands">
+            <span class="arch-cmd">store &lt;file&gt;</span>
+            <span class="arch-cmd">verify &lt;file&gt;</span>
+            <span class="arch-cmd">hash &lt;file&gt;</span>
+          </div>
+        </div>
+        <div class="arch-arrows-row">
+          <div class="arch-arrow-down"></div>
+          <div class="arch-arrow-down"></div>
+        </div>
+        <div class="arch-mid-row">
+          <div class="arch-box">
+            <div class="arch-box-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+            </div>
+            <div class="arch-box-title">Hashing Module</div>
+            <div class="arch-box-sub">sha2 crate · 64 KiB chunks</div>
+            <code class="arch-box-code">file → [u8; 32]</code>
+          </div>
+          <div class="arch-box arch-box-main">
+            <div class="arch-box-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <div class="arch-box-title">Blockchain Module</div>
+            <div class="arch-box-sub">ethers-rs · abigen! bindings</div>
+            <code class="arch-box-code">store_proof / get_proof_info</code>
+          </div>
+        </div>
+        <div class="arch-arrow-down-center"></div>
+        <div class="arch-layer arch-layer-rpc">
+          <div class="arch-label">Alchemy / Infura (HTTPS JSON-RPC)</div>
+          <div class="arch-sub">Ethereum Sepolia Testnet</div>
+        </div>
+        <div class="arch-arrow-down-center"></div>
+        <div class="arch-layer arch-layer-contract">
+          <div class="arch-contract-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            DataIntegrity.sol · Solidity 0.8.20
+          </div>
+          <div class="arch-contract-methods">
+            <div class="method method-write">
+              <span class="method-badge write">write</span>
+              <code>storeProof(bytes32, string)</code>
+            </div>
+            <div class="method method-read">
+              <span class="method-badge read">view</span>
+              <code>verifyProof(bytes32) → bool</code>
+            </div>
+            <div class="method method-read">
+              <span class="method-badge read">view</span>
+              <code>getProofRecord(bytes32) → ProofRecord</code>
+            </div>
+            <div class="method method-read">
+              <span class="method-badge read">view</span>
+              <code>getTimestamp(bytes32) → uint256</code>
+            </div>
+          </div>
+          <div class="arch-storage">
+            <span class="storage-label">Storage:</span>
+            <code>mapping(bytes32 =&gt; ProofRecord)</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tech Stack -->
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-icon" style="--c: #CE422B">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M23.95 8.01c-1.87-4.41-7.49-7-14.42-5.68C4.51 3.38 1.34 6.18.05 9.94-.64 12.04.03 15.29 1.59 17.3c4.55 5.93 14.38 5.43 18.33-.94 1.87-3.04 2.18-6.67.84-9.66l-.82 1.04-.12.14c.72 2.63.08 5.41-1.71 7.51-3.14 3.68-9.08 3.84-12.78.86C3.26 14.13 2.7 11.66 3 9c.24-2.14 1.64-4.18 3.62-5.56 2.37-1.66 5.47-2.29 7.93-1.63C16.73 2.56 18.34 4 18.9 6l.27-.3 1.61-1.82c.32.65.53 1.27.63 1.79l.25-.26 1.09-1.24.18.53.6 1.7c.08.24.18.63.3 1.07l.12.54Z"/></svg>
+          </div>
+          <div class="tech-name">Rust</div>
+          <div class="tech-desc">Systems language with zero-cost abstractions, memory safety, and async I/O</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon" style="--c: #627EEA">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 17.97L4.58 13.62 11.943 24l7.37-10.38-7.372 4.35h.003zM12.056 0L4.69 12.223l7.365 4.354 7.365-4.35L12.056 0z"/></svg>
+          </div>
+          <div class="tech-name">Ethereum</div>
+          <div class="tech-desc">Immutable public ledger for timestamped, auditable proof records</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon" style="--c: #6EE7F7">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="tech-name">ethers-rs</div>
+          <div class="tech-desc">Type-safe Ethereum bindings generated at compile time via abigen! macro</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon" style="--c: #A78BFA">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
+          <div class="tech-name">Foundry</div>
+          <div class="tech-desc">Blazing-fast Solidity testing framework with gas reports and fuzzing</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon" style="--c: #34D399">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="tech-name">SHA-256</div>
+          <div class="tech-desc">Collision-resistant 32-byte digest via pure-Rust sha2 crate (no C bindings)</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-icon" style="--c: #FBBF24">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </div>
+          <div class="tech-name">clap</div>
+          <div class="tech-desc">Derive-macro CLI parsing with automatic --help, type coercion, and validation</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECURITY MODEL ─────────────────────────────────────────────────── -->
+  <section class="section section-dark" id="security">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Security</span>
+        <h2 class="section-title">Security Model</h2>
+        <p class="section-subtitle">
+          Every threat considered. Every mitigation documented.
+        </p>
+      </div>
+
+      <div class="security-grid">
+        <div class="threat-card" id="threat-1">
+          <div class="threat-header">
+            <div class="threat-icon safe">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <span class="threat-name">Raw data exposure</span>
+          </div>
+          <p class="threat-desc">Only the hash is ever sent to the chain — never the data itself. Privacy-preserving by design.</p>
+        </div>
+        <div class="threat-card" id="threat-2">
+          <div class="threat-header">
+            <div class="threat-icon safe">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <span class="threat-name">Private key exposure</span>
+          </div>
+          <p class="threat-desc">Loaded from <code>.env</code> file, never from CLI args or logs. Never appears in shell history.</p>
+        </div>
+        <div class="threat-card" id="threat-3">
+          <div class="threat-header">
+            <div class="threat-icon safe">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <span class="threat-name">Replay attacks</span>
+          </div>
+          <p class="threat-desc">Wallet bound to chain ID. Transactions are chain-specific and cannot be replayed on other networks.</p>
+        </div>
+        <div class="threat-card" id="threat-4">
+          <div class="threat-header">
+            <div class="threat-icon safe">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            </div>
+            <span class="threat-name">Duplicate storage</span>
+          </div>
+          <p class="threat-desc">Contract reverts with <code>DuplicateProof</code> custom error — ~50 gas cheaper than <code>require()</code> + string.</p>
+        </div>
+        <div class="threat-card" id="threat-5">
+          <div class="threat-header">
+            <div class="threat-icon safe">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            </div>
+            <span class="threat-name">Reentrancy</span>
+          </div>
+          <p class="threat-desc">N/A — no ETH transfers, no external calls. State written before event emit (CEI pattern).</p>
+        </div>
+        <div class="threat-card" id="threat-6">
+          <div class="threat-header">
+            <div class="threat-icon safe">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <span class="threat-name">Hash collision</span>
+          </div>
+          <p class="threat-desc">SHA-256 offers 2¹²⁸ collision resistance. Finding two files with the same hash is computationally infeasible.</p>
+        </div>
+      </div>
+
+      <div class="limitations-box">
+        <div class="limitations-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          What This Protocol Does NOT Provide
+        </div>
+        <ul class="limitations-list">
+          <li><strong>Confidentiality</strong> — the hash is public; anyone who has the file can verify it</li>
+          <li><strong>Hash-to-file lookup</strong> — you need the original file to verify</li>
+          <li><strong>Deletion</strong> — proofs are permanent once stored on the blockchain</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── GAS COSTS ──────────────────────────────────────────────────────── -->
+  <section class="section" id="gas">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Economics</span>
+        <h2 class="section-title">Gas Costs</h2>
+        <p class="section-subtitle">
+          Store once. Verify forever — for free.
+        </p>
+      </div>
+
+      <div class="gas-grid">
+        <div class="gas-card gas-card-write">
+          <div class="gas-op">storeProof</div>
+          <div class="gas-amount">~68,000</div>
+          <div class="gas-unit">gas units</div>
+          <div class="gas-cost">≈ <strong>$0.014</strong> at $2K ETH / 10 gwei</div>
+          <div class="gas-note">One-time cost. Includes storing <code>timestamp</code>, <code>address</code>, <code>filename</code> and emitting the <code>ProofStored</code> event.</div>
+          <div class="gas-saving">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Saves ~20K gas vs. string key (uses <code>bytes32</code> instead)
+          </div>
+        </div>
+
+        <div class="gas-card gas-card-read">
+          <div class="gas-op">verifyProof</div>
+          <div class="gas-amount free-text">Free</div>
+          <div class="gas-unit">view call</div>
+          <div class="gas-cost">$0.00 — no gas consumed</div>
+          <div class="gas-note"><code>view</code> functions execute locally on the node. No state mutation = no gas. Anyone can verify without a funded wallet.</div>
+        </div>
+
+        <div class="gas-card gas-card-read">
+          <div class="gas-op">getTimestamp</div>
+          <div class="gas-amount free-text">Free</div>
+          <div class="gas-unit">view call</div>
+          <div class="gas-cost">$0.00 — no gas consumed</div>
+          <div class="gas-note">Returns the block timestamp when the proof was anchored. Reverts with <code>ProofNotFound</code> for unknown hashes.</div>
+        </div>
+      </div>
+
+      <div class="optimization-note">
+        <div class="opt-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Key Gas Optimization
+        </div>
+        <p>The contract uses <code>bytes32</code> (a fixed 32-byte slot) rather than <code>string</code> as the hash key, saving approximately <strong>20,000 gas</strong> per store operation by avoiding dynamic storage allocation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── USE CASES ──────────────────────────────────────────────────────── -->
+  <section class="section section-dark" id="usecases">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Applications</span>
+        <h2 class="section-title">Real-World Use Cases</h2>
+        <p class="section-subtitle">
+          Any scenario where "prove this existed unchanged at this time" matters.
+        </p>
+      </div>
+      <div class="usecase-grid">
+        <div class="usecase-card" id="uc-1">
+          <div class="usecase-icon">⚖️</div>
+          <h3>Legal Documents</h3>
+          <p>Prove a contract was drafted and signed before a dispute arose. Immutable timestamp acts as a digital notary.</p>
+        </div>
+        <div class="usecase-card" id="uc-2">
+          <div class="usecase-icon">🔬</div>
+          <h3>Research Data</h3>
+          <p>Timestamp datasets before publication to prevent priority disputes and prove pre-registration of hypotheses.</p>
+        </div>
+        <div class="usecase-card" id="uc-3">
+          <div class="usecase-icon">🗂️</div>
+          <h3>Audit Trails</h3>
+          <p>Anchor log files, build artifacts, or configuration snapshots at critical points in your CI/CD pipeline.</p>
+        </div>
+        <div class="usecase-card" id="uc-4">
+          <div class="usecase-icon">🎨</div>
+          <h3>Intellectual Property</h3>
+          <p>Stake a timestamped claim on creative works — music, art, writing — before formal registration.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FUTURE ROADMAP ─────────────────────────────────────────────────── -->
+  <section class="section" id="roadmap">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Roadmap</span>
+        <h2 class="section-title">Potential Improvements</h2>
+        <p class="section-subtitle">
+          Planned enhancements ranked by benefit and complexity.
+        </p>
+      </div>
+      <div class="roadmap-table-wrap">
+        <table class="roadmap-table">
+          <thead>
+            <tr>
+              <th>Improvement</th>
+              <th>Benefit</th>
+              <th>Complexity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="feature-name">IPFS Integration</span></td>
+              <td>Full provenance: timestamp + integrity + retrieval</td>
+              <td><span class="complexity medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="feature-name">ZK Proofs (Poseidon)</span></td>
+              <td>Privacy-preserving verification without revealing file or hash</td>
+              <td><span class="complexity high">High</span></td>
+            </tr>
+            <tr>
+              <td><span class="feature-name">Batch Storage</span></td>
+              <td>Multiple files in one tx — amortize gas costs</td>
+              <td><span class="complexity low">Low</span></td>
+            </tr>
+            <tr>
+              <td><span class="feature-name">Merkle Tree of Hashes</span></td>
+              <td>Store one root for N files — massive gas savings</td>
+              <td><span class="complexity medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="feature-name">ENS for Uploaders</span></td>
+              <td><code>0xAbCd...</code> → <code>alice.eth</code> in output</td>
+              <td><span class="complexity low">Low</span></td>
+            </tr>
+            <tr>
+              <td><span class="feature-name">Hardware Wallet (Ledger)</span></td>
+              <td>Never hold private key in software</td>
+              <td><span class="complexity medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><span class="feature-name">Revocation Registry</span></td>
+              <td>Soft-invalidate proofs (can't delete, but can flag)</td>
+              <td><span class="complexity low">Low</span></td>
+            </tr>
+            <tr>
+              <td><span class="feature-name">Cross-chain (L2)</span></td>
+              <td>Optimism/Arbitrum: same security, 100× cheaper gas</td>
+              <td><span class="complexity medium">Medium</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA FOOTER ─────────────────────────────────────────────────────── -->
+  <section class="cta-section">
+    <div class="container cta-inner">
+      <h2 class="cta-title">Ready to anchor your first proof?</h2>
+      <p class="cta-sub">Open source · MIT License · Built with Rust &amp; Solidity</p>
+      <div class="cta-btns">
+        <a href="#demo" class="btn btn-primary btn-lg" id="cta-demo-btn">Try the Demo</a>
+        <a href="https://github.com" target="_blank" class="btn btn-ghost btn-lg" id="cta-github-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <svg width="20" height="20" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="url(#footer-logo-grad)" stroke-width="1.5" fill="none"/>
+          <path d="M14 10L18 12.5V17L14 19.5L10 17V12.5L14 10Z" fill="url(#footer-logo-grad)"/>
+          <defs>
+            <linearGradient id="footer-logo-grad" x1="2" y1="2" x2="26" y2="26">
+              <stop stop-color="#6EE7F7"/><stop offset="1" stop-color="#A78BFA"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        PODIP
+      </div>
+      <p class="footer-text">Proof of Data Integrity Protocol · MIT License</p>
+      <p class="footer-text">Built with Rust · ethers-rs · Solidity 0.8.20 · Foundry</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
