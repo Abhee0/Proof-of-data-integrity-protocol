@@ -1,0 +1,12 @@
+C:\Users\abhis\OneDrive\Desktop\My Playground\OpenSourcePR's\Proof-of-data-integrity-protocol\rust-client\target\debug\deps\thiserror-21a04ef4df54d515.d: C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\lib.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\aserror.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\display.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\var.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\private.rs C:\Users\abhis\OneDrive\Desktop\My\ Playground\OpenSourcePR's\Proof-of-data-integrity-protocol\rust-client\target\debug\build\thiserror-bd2a9bf1cd871ac4\out/private.rs
+
+C:\Users\abhis\OneDrive\Desktop\My Playground\OpenSourcePR's\Proof-of-data-integrity-protocol\rust-client\target\debug\deps\libthiserror-21a04ef4df54d515.rmeta: C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\lib.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\aserror.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\display.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\var.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\private.rs C:\Users\abhis\OneDrive\Desktop\My\ Playground\OpenSourcePR's\Proof-of-data-integrity-protocol\rust-client\target\debug\build\thiserror-bd2a9bf1cd871ac4\out/private.rs
+
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\lib.rs:
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\aserror.rs:
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\display.rs:
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\var.rs:
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\private.rs:
+C:\Users\abhis\OneDrive\Desktop\My\ Playground\OpenSourcePR's\Proof-of-data-integrity-protocol\rust-client\target\debug\build\thiserror-bd2a9bf1cd871ac4\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\abhis\\OneDrive\\Desktop\\My Playground\\OpenSourcePR's\\Proof-of-data-integrity-protocol\\rust-client\\target\\debug\\build\\thiserror-bd2a9bf1cd871ac4\\out

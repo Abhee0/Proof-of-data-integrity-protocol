@@ -1,0 +1,10 @@
+C:\Users\abhis\OneDrive\Desktop\My Playground\OpenSourcePR's\Proof-of-data-integrity-protocol\rust-client\target\debug\deps\coins_core-356f13875ede9065.d: C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\lib.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\macros.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\enc.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\hashes.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\prelude.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\ser.rs
+
+C:\Users\abhis\OneDrive\Desktop\My Playground\OpenSourcePR's\Proof-of-data-integrity-protocol\rust-client\target\debug\deps\libcoins_core-356f13875ede9065.rmeta: C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\lib.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\macros.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\enc.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\hashes.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\prelude.rs C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\ser.rs
+
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\lib.rs:
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\macros.rs:
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\enc.rs:
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\hashes.rs:
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\prelude.rs:
+C:\Users\abhis\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\coins-core-0.8.7\src\ser.rs:
